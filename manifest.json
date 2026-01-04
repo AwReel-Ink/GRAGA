@@ -1,8 +1,8 @@
 {
-    "name": "Grattage Tracker",
-    "short_name": "Grattage",
+    "name": "GRAGA !",
+    "short_name": "GRAGA !",
     "description": "Suivi de vos jeux à gratter",
-    "start_url": "/",
+    "start_url": "/GRAGA",
     "display": "standalone",
     "background_color": "#0f172a",
     "theme_color": "#6366f1",
@@ -24,3 +24,4 @@
     "categories": ["finance", "utilities"],
     "lang": "fr-FR"
 }
+
