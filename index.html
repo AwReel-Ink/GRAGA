@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="description" content="Suivi de vos jeux à gratter">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>Graga !</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Page d'accueil -->
+        <div id="home-page" class="page active">
+            <header>
+                <h1>🎰 GRAGA ! 🎰</h1>
+                <button class="icon-btn settings-btn" onclick="showSettings()">⚙️</button>
+            </header>
+            
+            <div class="stats-container">
+                <div class="stat-bubble primary">
+                    <span class="stat-label">Gains Totaux</span>
+                    <span class="stat-value" id="total-gains">0,00 €</span>
+                </div>
+                <div class="stat-bubble secondary">
+                    <span class="stat-label">Dépenses Totales</span>
+                    <span class="stat-value" id="total-spent">0,00 €</span>
+                </div>
+            </div>
+            
+            <div class="stats-container">
+                <div class="stat-bubble success">
+                    <span class="stat-label">🏆 Meilleur Jeu</span>
+                    <span class="stat-value small" id="best-game">-</span>
+                </div>
+                <div class="stat-bubble danger">
+                    <span class="stat-label">📉 Pire Jeu</span>
+                    <span class="stat-value small" id="worst-game">-</span>
+                </div>
+            </div>
+            
+            <div class="section-header">
+                <h2>Mes Jeux</h2>
+                <button class="icon-btn add-btn" onclick="showAddGame()">➕</button>
+            </div>
+            
+            <div id="games-list" class="games-list">
+                <p class="empty-state">Aucun jeu enregistré</p>
+            </div>
+        </div>
+
+        <!-- Page Ajout de Jeu -->
+        <div id="add-game-page" class="page">
+            <header>
+                <button class="icon-btn back-btn" onclick="goHome()">←</button>
+                <h1>Nouveau Jeu</h1>
+                <div class="spacer"></div>
+            </header>
+            
+            <form id="add-game-form" class="form-container">
+                <div class="form-group">
+                    <label for="game-name">Nom du jeu</label>
+                    <input type="text" id="game-name" placeholder="Ex: Astro" required>
+                </div>
+                <div class="form-group">
+                    <label for="ticket-price">Prix du ticket (€)</label>
+                    <input type="number" id="ticket-price" step="0.5" min="0.5" placeholder="Ex: 2.00" required>
+                </div>
+                <button type="submit" class="btn-primary">Enregistrer</button>
+            </form>
+        </div>
+
+        <!-- Page Détail du Jeu -->
+        <div id="game-detail-page" class="page">
+            <header>
+                <button class="icon-btn back-btn" onclick="goHome()">←</button>
+                <h1 id="detail-game-name">Nom du Jeu</h1>
+                <button class="icon-btn delete-btn" onclick="confirmDeleteGame()">🗑️</button>
+            </header>
+            
+            <div class="detail-stats">
+                <div class="detail-stat">
+                    <span class="label">Tickets achetés</span>
+                    <span class="value" id="detail-tickets-count">0</span>
+                </div>
+                <div class="detail-stat">
+                    <span class="label">Coût total</span>
+                    <span class="value" id="detail-total-cost">0,00 €</span>
+                </div>
+                <div class="detail-stat">
+                    <span class="label">Gains totaux</span>
+                    <span class="value" id="detail-total-gains">0,00 €</span>
+                </div>
+                <div class="detail-stat">
+                    <span class="label">Gain moyen/ticket</span>
+                    <span class="value" id="detail-avg-gain">0,00 €</span>
+                </div>
+                <div class="detail-stat">
+                    <span class="label">Ratio gain/coût</span>
+                    <span class="value" id="detail-ratio">0%</span>
+                </div>
+            </div>
+            
+            <div class="section-header">
+                <h2>Tickets</h2>
+                <button class="icon-btn add-btn" onclick="addTicketRow()">➕</button>
+            </div>
+            
+            <div id="tickets-container" class="tickets-container">
+                <!-- Tickets seront ajoutés ici -->
+            </div>
+            
+            <div id="new-tickets-container" class="new-tickets-container">
+                <!-- Nouveaux tickets à ajouter -->
+            </div>
+            
+            <button id="save-tickets-btn" class="btn-primary hidden" onclick="saveNewTickets()">
+                Enregistrer les tickets
+            </button>
+        </div>
+
+        <!-- Page Paramètres -->
+        <div id="settings-page" class="page">
+            <header>
+                <button class="icon-btn back-btn" onclick="goHome()">←</button>
+                <h1>Paramètres</h1>
+                <div class="spacer"></div>
+            </header>
+            
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h3>📊 Statistiques globales</h3>
+                    <div class="settings-item">
+                        <span>Nombre total de jeux</span>
+                        <span id="stats-total-games">0</span>
+                    </div>
+                    <div class="settings-item">
+                        <span>Tickets achetés au total</span>
+                        <span id="stats-total-tickets">0</span>
+                    </div>
+                    <div class="settings-item">
+                        <span>Tickets gagnants</span>
+                        <span id="stats-winning-tickets">0</span>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>ℹ️ À propos</h3>
+                    <div class="settings-item">
+                        <span>Version</span>
+                        <span>1.0.0</span>
+                    </div>
+                    <div class="settings-item">
+                        <span>Application</span>
+                        <span>GRAGA ! (GRAttage GAin !)</span>
+                    </div>
+                </div>
+                
+                <div class="copyright">
+                    © Tous droits réservés<br>
+                    LEROY Aurélien - 2026
+                </div>
+
+                <div class="settings-section danger-zone">
+                    <h3>⚠️ Réinitialiser l'application ⚠️</h3>
+                    <button class="btn-danger" onclick="confirmResetAll()">
+                        Réinitialiser toutes les données
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmation -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="modal-title">Confirmation</h3>
+            <p id="modal-message">Êtes-vous sûr ?</p>
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="closeModal()">Annuler</button>
+                <button class="btn-danger" id="modal-confirm">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
