@@ -1,4 +1,4 @@
-const CACHE_NAME = 'GRAGA_V1.1.0';
+const CACHE_NAME = 'GRAGA_V1.1.1';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -75,4 +75,5 @@ self.addEventListener('fetch', (event) => {
             })
     );
 });
+
 
