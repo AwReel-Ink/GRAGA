@@ -587,3 +587,280 @@ header h1 {
     background: transparent;
     color: var(--text-muted);
 }
+
+/* ==================== TICKET CLIQUABLE ==================== */
+.ticket-row.clickable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ticket-row.clickable:hover {
+    background: var(--bg-tertiary);
+    transform: translateX(4px);
+}
+
+.ticket-row.clickable:active {
+    transform: scale(0.98);
+}
+
+.ticket-label {
+    flex: 1;
+}
+
+.ticket-edit-icon {
+    font-size: 0.9rem;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+}
+
+.ticket-row.clickable:hover .ticket-edit-icon {
+    opacity: 1;
+}
+
+/* Gain en attente */
+.ticket-gain.pending {
+    color: #f59e0b;
+    font-style: italic;
+    font-weight: 500;
+}
+
+.pending-badge {
+    background: #f59e0b;
+    color: white;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 8px;
+    margin-left: 0.3rem;
+    vertical-align: middle;
+}
+
+.pending-badge.hidden {
+    display: none;
+}
+
+/* ==================== MODAL D'ÉDITION ==================== */
+#edit-ticket-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#edit-ticket-modal .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+#edit-ticket-modal .modal-content {
+    position: relative;
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    padding: 1.5rem;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+#edit-ticket-modal h2 {
+    margin: 0 0 1.25rem 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+.edit-form {
+    margin-bottom: 1.5rem;
+}
+
+.edit-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.edit-form input {
+    width: 100%;
+    padding: 0.875rem;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 1.1rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.edit-form input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Gains rapides */
+.quick-gains {
+    margin-top: 1rem;
+}
+
+.quick-label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.quick-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.quick-btn {
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.quick-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.quick-btn:active {
+    transform: scale(0.95);
+}
+
+/* Actions de la modal */
+.modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.modal-actions .btn {
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.btn-outline:hover {
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+}
+
+.btn-danger-outline {
+    background: transparent;
+    border: 2px solid var(--danger);
+    color: var(--danger);
+}
+
+.btn-danger-outline:hover {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-primary {
+    background: var(--primary);
+    border: 2px solid var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+/* ==================== TOAST NOTIFICATIONS ==================== */
+.toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 0.875rem 1.5rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 2000;
+    max-width: 90%;
+    text-align: center;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast-success {
+    border-left: 4px solid var(--success);
+}
+
+.toast-error {
+    border-left: 4px solid var(--danger);
+}
+
+.toast-info {
+    border-left: 4px solid var(--primary);
+}
+
+/* ==================== RESPONSIVE MODAL ==================== */
+@media (max-width: 400px) {
+    #edit-ticket-modal .modal-content {
+        border-radius: 16px 16px 0 0;
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        max-width: 100%;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+    }
+    
+    .modal-actions .btn {
+        width: 100%;
+        text-align: center;
+    }
+}
