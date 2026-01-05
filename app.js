@@ -111,6 +111,30 @@ async function addTickets(tickets) {
     });
 }
 
+// Mettre à jour un ticket
+async function updateTicket(ticket) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['tickets'], 'readwrite');
+        const store = transaction.objectStore('tickets');
+        const request = store.put(ticket);
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+// Supprimer un ticket spécifique
+async function deleteTicket(ticketId) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['tickets'], 'readwrite');
+        const store = transaction.objectStore('tickets');
+        const request = store.delete(ticketId);
+
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+    });
+}
+
 // Récupérer tous les tickets
 async function getAllTickets() {
     return new Promise((resolve, reject) => {
@@ -138,6 +162,7 @@ async function resetAllData() {
 
 // ==================== Variables Globales ====================
 let currentGameId = null;
+let currentGame = null;
 let newTicketsToAdd = [];
 
 // ==================== Navigation ====================
@@ -282,12 +307,18 @@ async function loadGameDetail() {
         return;
     }
 
+    currentGame = game; // Stocker le jeu actuel
     document.getElementById('detail-game-name').textContent = game.name;
 
     const tickets = await getTicketsByGame(currentGameId);
-    const totalGains = tickets.reduce((sum, t) => sum + t.gain, 0);
+    
+    // Séparer les tickets avec gain défini et en attente
+    const definedTickets = tickets.filter(t => t.gain !== null && t.gain !== undefined);
+    const pendingTickets = tickets.filter(t => t.gain === null || t.gain === undefined);
+    
+    const totalGains = definedTickets.reduce((sum, t) => sum + t.gain, 0);
     const totalCost = tickets.length * game.ticketPrice;
-    const avgGain = tickets.length > 0 ? totalGains / tickets.length : 0;
+    const avgGain = definedTickets.length > 0 ? totalGains / definedTickets.length : 0;
     const ratio = totalCost > 0 ? (totalGains / totalCost) * 100 : 0;
 
     document.getElementById('detail-tickets-count').textContent = tickets.length;
@@ -295,22 +326,49 @@ async function loadGameDetail() {
     document.getElementById('detail-total-gains').textContent = formatCurrency(totalGains);
     document.getElementById('detail-avg-gain').textContent = formatCurrency(avgGain);
     document.getElementById('detail-ratio').textContent = ratio.toFixed(1) + '%';
-
-    // Afficher les tickets existants
-    const ticketsContainer = document.getElementById('tickets-container');
     
-    if (tickets.length === 0) {
+    // Afficher le nombre de tickets en attente
+    const pendingCountEl = document.getElementById('detail-pending-count');
+    if (pendingCountEl) {
+        if (pendingTickets.length > 0) {
+            pendingCountEl.textContent = `(${pendingTickets.length} en attente)`;
+            pendingCountEl.classList.remove('hidden');
+        } else {
+            pendingCountEl.classList.add('hidden');
+        }
+    }
+
+    // Afficher les tickets existants (cliquables pour modification)
+    const ticketsContainer = document.getElementById('tickets-container');
+
+    if (tickets.length === 0 && newTicketsToAdd.length === 0) {
         ticketsContainer.innerHTML = '<p class="empty-state">Aucun ticket.<br>Cliquez sur ➕ pour ajouter un ticket.</p>';
     } else {
-        ticketsContainer.innerHTML = tickets.map((ticket, index) => `
-            <div class="ticket-row">
-                <div class="ticket-number">${index + 1}</div>
-                <div>Ticket #${index + 1}</div>
-                <div class="ticket-gain ${ticket.gain > 0 ? 'positive' : 'zero'}">
-                    ${formatCurrency(ticket.gain)}
+        // Trier : tickets en attente d'abord, puis par date
+        const sortedTickets = [...tickets].sort((a, b) => {
+            const aPending = a.gain === null || a.gain === undefined;
+            const bPending = b.gain === null || b.gain === undefined;
+            if (aPending && !bPending) return -1;
+            if (!aPending && bPending) return 1;
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
+        ticketsContainer.innerHTML = sortedTickets.map((ticket, index) => {
+            const isPending = ticket.gain === null || ticket.gain === undefined;
+            const gainClass = isPending ? 'pending' : (ticket.gain > 0 ? 'positive' : 'zero');
+            const gainText = isPending ? 'À gratter' : formatCurrency(ticket.gain);
+            
+            return `
+                <div class="ticket-row clickable" onclick="openEditTicketModal(${ticket.id})">
+                    <div class="ticket-number">${index + 1}</div>
+                    <div class="ticket-label">Ticket #${index + 1}</div>
+                    <div class="ticket-gain ${gainClass}">
+                        ${gainText}
+                    </div>
+                    <div class="ticket-edit-icon">✏️</div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     // Réinitialiser les nouveaux tickets
@@ -318,8 +376,150 @@ async function loadGameDetail() {
     renderNewTickets();
 }
 
+// Ouvrir la modal d'édition d'un ticket existant
+async function openEditTicketModal(ticketId) {
+    const tickets = await getTicketsByGame(currentGameId);
+    const ticket = tickets.find(t => t.id === ticketId);
+    
+    if (!ticket) return;
+    
+    const currentGain = (ticket.gain !== null && ticket.gain !== undefined) ? ticket.gain : '';
+    
+    const modalHtml = `
+        <div id="edit-ticket-modal" class="modal">
+            <div class="modal-overlay" onclick="closeEditTicketModal()"></div>
+            <div class="modal-content edit-modal">
+                <h2>Modifier le ticket</h2>
+                <div class="edit-form">
+                    <label for="edit-ticket-gain">Gain obtenu (€)</label>
+                    <input type="number" 
+                           id="edit-ticket-gain" 
+                           step="0.5" 
+                           min="0" 
+                           placeholder="Laisser vide si pas encore gratté"
+                           value="${currentGain}">
+                    
+                    <div class="quick-gains">
+                        <span class="quick-label">Gains rapides :</span>
+                        <div class="quick-buttons">
+                            <button type="button" class="quick-btn" onclick="setQuickGain(0)">0€</button>
+                            <button type="button" class="quick-btn" onclick="setQuickGain(2)">2€</button>
+                            <button type="button" class="quick-btn" onclick="setQuickGain(5)">5€</button>
+                            <button type="button" class="quick-btn" onclick="setQuickGain(10)">10€</button>
+                            <button type="button" class="quick-btn" onclick="setQuickGain(20)">20€</button>
+                            <button type="button" class="quick-btn" onclick="setQuickGain(50)">50€</button>
+                            <button type="button" class="quick-btn" onclick="setQuickGain(100)">100€</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn btn-outline" onclick="closeEditTicketModal()">Annuler</button>
+                    <button class="btn btn-danger-outline" onclick="deleteTicketConfirm(${ticketId})">Supprimer</button>
+                    <button class="btn btn-primary" onclick="saveTicketEdit(${ticketId})">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Supprimer une éventuelle modal existante
+    const existingModal = document.getElementById('edit-ticket-modal');
+    if (existingModal) existingModal.remove();
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Focus sur l'input
+    setTimeout(() => {
+        document.getElementById('edit-ticket-gain').focus();
+    }, 100);
+}
+
+// Définir un gain rapide
+function setQuickGain(value) {
+    document.getElementById('edit-ticket-gain').value = value;
+}
+
+// Fermer la modal d'édition
+function closeEditTicketModal() {
+    const modal = document.getElementById('edit-ticket-modal');
+    if (modal) modal.remove();
+}
+
+// Sauvegarder la modification d'un ticket
+async function saveTicketEdit(ticketId) {
+    const input = document.getElementById('edit-ticket-gain');
+    const gainValue = input.value.trim();
+    
+    // Si vide, mettre null (ticket en attente)
+    const gain = gainValue === '' ? null : parseFloat(gainValue);
+    
+    if (gain !== null && isNaN(gain)) {
+        alert('Veuillez entrer un montant valide.');
+        return;
+    }
+    
+    if (gain !== null && gain < 0) {
+        alert('Le gain ne peut pas être négatif.');
+        return;
+    }
+    
+    try {
+        const tickets = await getTicketsByGame(currentGameId);
+        const ticket = tickets.find(t => t.id === ticketId);
+        
+        if (ticket) {
+            ticket.gain = gain;
+            await updateTicket(ticket);
+            closeEditTicketModal();
+            await loadGameDetail();
+            showToast('Ticket mis à jour !', 'success');
+        }
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour:', error);
+        alert('Erreur lors de la mise à jour du ticket.');
+    }
+}
+
+// Confirmer la suppression d'un ticket
+function deleteTicketConfirm(ticketId) {
+    if (confirm('Supprimer ce ticket ?')) {
+        deleteTicketAndRefresh(ticketId);
+    }
+}
+
+// Supprimer un ticket et rafraîchir
+async function deleteTicketAndRefresh(ticketId) {
+    try {
+        await deleteTicket(ticketId);
+        closeEditTicketModal();
+        await loadGameDetail();
+        showToast('Ticket supprimé', 'success');
+    } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
+        alert('Erreur lors de la suppression du ticket.');
+    }
+}
+
+// Toast notification
+function showToast(message, type = 'info') {
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) existingToast.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
+}
+
+// Ajouter un nouveau ticket (pré-enregistrement)
 function addTicketRow() {
-    newTicketsToAdd.push({ gain: 0 });
+    newTicketsToAdd.push({ gain: null }); // null = en attente par défaut
     renderNewTickets();
 }
 
@@ -329,7 +529,8 @@ function removeNewTicket(index) {
 }
 
 function updateNewTicketGain(index, value) {
-    newTicketsToAdd[index].gain = parseFloat(value) || 0;
+    const trimmed = value.trim();
+    newTicketsToAdd[index].gain = trimmed === '' ? null : parseFloat(trimmed);
 }
 
 function renderNewTickets() {
@@ -344,19 +545,22 @@ function renderNewTickets() {
 
     saveBtn.classList.remove('hidden');
 
-    container.innerHTML = newTicketsToAdd.map((ticket, index) => `
-        <div class="new-ticket-row">
-            <div class="ticket-number">+</div>
-            <input type="number" 
-                   step="0.5" 
-                   min="0" 
-                   placeholder="Gain (€)" 
-                   value="${ticket.gain || ''}"
-                   onchange="updateNewTicketGain(${index}, this.value)"
-                   oninput="updateNewTicketGain(${index}, this.value)">
-            <button class="remove-ticket-btn" onclick="removeNewTicket(${index})">−</button>
-        </div>
-    `).join('');
+    container.innerHTML = newTicketsToAdd.map((ticket, index) => {
+        const gainValue = (ticket.gain !== null && ticket.gain !== undefined) ? ticket.gain : '';
+        return `
+            <div class="new-ticket-row">
+                <div class="ticket-number">+</div>
+                <input type="number" 
+                       step="0.5" 
+                       min="0" 
+                       placeholder="Gain (€) - vide si pas gratté"
+                       value="${gainValue}"
+                       onchange="updateNewTicketGain(${index}, this.value)"
+                       oninput="updateNewTicketGain(${index}, this.value)">
+                <button class="remove-ticket-btn" onclick="removeNewTicket(${index})">−</button>
+            </div>
+        `;
+    }).join('');
 }
 
 async function saveNewTickets() {
@@ -364,7 +568,7 @@ async function saveNewTickets() {
 
     const tickets = newTicketsToAdd.map(t => ({
         gameId: currentGameId,
-        gain: t.gain || 0,
+        gain: t.gain, // Peut être null si en attente
         createdAt: new Date().toISOString()
     }));
 
@@ -372,6 +576,7 @@ async function saveNewTickets() {
         await addTickets(tickets);
         newTicketsToAdd = [];
         await loadGameDetail();
+        showToast(`${tickets.length} ticket(s) ajouté(s)`, 'success');
     } catch (error) {
         alert('Erreur lors de l\'enregistrement des tickets.');
         console.error(error);
