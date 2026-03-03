@@ -1,3 +1,4 @@
+/* Graga! V1.2.0 */
 * {
     margin: 0;
     padding: 0;
@@ -863,4 +864,73 @@ header h1 {
         width: 100%;
         text-align: center;
     }
+}
+
+/* ==================== EXPORT/IMPORT ==================== */
+.settings-description {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.settings-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-export,
+.btn-import {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+    font-family: inherit;
+    font-weight: 500;
+}
+
+.btn-export {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+}
+
+.btn-export:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+}
+
+.btn-export:active {
+    transform: translateY(0);
+}
+
+.btn-import {
+    background: var(--bg-input);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.btn-import:hover {
+    background: var(--border);
+}
+
+.btn-import:active {
+    transform: scale(0.98);
+}
+
+.settings-warning {
+    color: var(--warning);
+    font-size: 0.8rem;
+    margin-top: 12px;
+    text-align: center;
+    padding: 8px;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 8px;
 }
