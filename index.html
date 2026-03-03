@@ -103,8 +103,12 @@
                     <span class="value" id="detail-avg-gain">0,00 €</span>
                 </div>
                 <div class="detail-stat">
-                    <span class="label">Ratio gain/coût</span>
-                    <span class="value" id="detail-ratio">0%</span>
+                    <span class="label">Tickets gagnants</span>
+                    <span class="value" id="detail-win-rate">0%</span>
+                </div>
+                <div class="detail-stat">
+                    <span class="label">🏆 Record</span>
+                    <span class="value" id="detail-best-gain">0,00 €</span>
                 </div>
             </div>
             
@@ -150,12 +154,31 @@
                         <span id="stats-winning-tickets">0</span>
                     </div>
                 </div>
+
+                <!-- NOUVELLE SECTION EXPORT/IMPORT -->
+                <div class="settings-section">
+                    <h3>📦 Sauvegarde des données</h3>
+                    <p class="settings-description">Exportez vos données pour les sauvegarder ou les transférer.</p>
+                    
+                    <div class="settings-buttons">
+                        <button class="btn-export" onclick="exportData()">
+                            📤 Exporter les données
+                        </button>
+                        
+                        <label class="btn-import">
+                            📥 Importer des données
+                            <input type="file" id="import-file" accept=".json" onchange="importData(event)" hidden>
+                        </label>
+                    </div>
+                    
+                    <p class="settings-warning">⚠️ L'import remplacera toutes vos données !</p>
+                </div>
                 
                 <div class="settings-section">
                     <h3>ℹ️ À propos</h3>
                     <div class="settings-item">
                         <span>Version</span>
-                        <span>1.1.1</span>
+                        <span>1.2.0</span>
                     </div>
                     <div class="settings-item">
                         <span>Application</span>
@@ -193,4 +216,3 @@
     <script src="app.js"></script>
 </body>
 </html>
-
