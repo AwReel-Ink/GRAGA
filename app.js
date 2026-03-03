@@ -1,3 +1,4 @@
+// ==================== GraGa! V-1.2.0 ====================
 // ==================== Configuration IndexedDB ====================
 const DB_NAME = 'GrattageTrackerDB';
 const DB_VERSION = 1;
@@ -319,13 +320,21 @@ async function loadGameDetail() {
     const totalGains = definedTickets.reduce((sum, t) => sum + t.gain, 0);
     const totalCost = tickets.length * game.ticketPrice;
     const avgGain = definedTickets.length > 0 ? totalGains / definedTickets.length : 0;
-    const ratio = totalCost > 0 ? (totalGains / totalCost) * 100 : 0;
+    
+    // Taux de tickets gagnants
+    const winningTickets = definedTickets.filter(t => t.gain > 0).length;
+    const winRate = definedTickets.length > 0 ? (winningTickets / definedTickets.length) * 100 : 0;
+    
+    // Meilleur gain
+    const bestGain = definedTickets.length > 0 ? Math.max(...definedTickets.map(t => t.gain)) : 0;
 
     document.getElementById('detail-tickets-count').textContent = tickets.length;
     document.getElementById('detail-total-cost').textContent = formatCurrency(totalCost);
     document.getElementById('detail-total-gains').textContent = formatCurrency(totalGains);
     document.getElementById('detail-avg-gain').textContent = formatCurrency(avgGain);
-    document.getElementById('detail-ratio').textContent = ratio.toFixed(1) + '%';
+    document.getElementById('detail-win-rate').textContent = winRate.toFixed(1) + '%';
+    document.getElementById('detail-best-gain').textContent = formatCurrency(bestGain);
+
     
     // Afficher le nombre de tickets en attente
     const pendingCountEl = document.getElementById('detail-pending-count');
@@ -617,6 +626,155 @@ async function loadSettingsStats() {
     document.getElementById('stats-total-games').textContent = games.length;
     document.getElementById('stats-total-tickets').textContent = tickets.length;
     document.getElementById('stats-winning-tickets').textContent = winningTickets.length;
+}
+
+// ==================== EXPORT/IMPORT ====================
+
+// EXPORT
+async function exportData() {
+    try {
+        const games = await getAllGames();
+        const tickets = await getAllTickets();
+
+        const exportData = {
+            version: 1,
+            exportDate: new Date().toISOString(),
+            appName: "GRAGA",
+            data: {
+                games: games,
+                tickets: tickets
+            }
+        };
+
+        const jsonString = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+
+        const date = new Date();
+        const dateStr = date.toISOString().split('T')[0];
+        const fileName = `graga-backup-${dateStr}.json`;
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast('✅ Export réussi !');
+
+    } catch (error) {
+        console.error('Erreur export:', error);
+        showToast('❌ Erreur lors de l\'export');
+    }
+}
+
+// IMPORT
+async function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const confirmed = confirm(
+        '⚠️ ATTENTION ⚠️\n\n' +
+        'L\'import va REMPLACER toutes vos données actuelles !\n\n' +
+        'Voulez-vous continuer ?'
+    );
+
+    if (!confirmed) {
+        event.target.value = '';
+        return;
+    }
+
+    try {
+        const text = await file.text();
+        const importedData = JSON.parse(text);
+
+        // Vérifier le format
+        if (!importedData.data || !importedData.data.games || !importedData.data.tickets) {
+            throw new Error('Format de fichier invalide');
+        }
+
+        // Supprimer les données existantes
+        await clearAllData();
+
+        // Importer les jeux
+        for (const game of importedData.data.games) {
+            await addGameDirect(game);
+        }
+
+        // Importer les tickets
+        for (const ticket of importedData.data.tickets) {
+            await addTicketDirect(ticket);
+        }
+
+        showToast('✅ Import réussi !');
+
+        // Recharger
+        await loadHomePage();
+        await loadSettingsStats();
+
+    } catch (error) {
+        console.error('Erreur import:', error);
+        showToast('❌ Erreur : ' + error.message);
+    }
+
+    event.target.value = '';
+}
+
+// Supprimer toutes les données
+async function clearAllData() {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['games', 'tickets'], 'readwrite');
+
+        transaction.objectStore('games').clear();
+        transaction.objectStore('tickets').clear();
+
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+    });
+}
+
+// Ajouter un jeu avec son ID
+async function addGameDirect(game) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['games'], 'readwrite');
+        const store = transaction.objectStore('games');
+        const request = store.put(game);
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+// Ajouter un ticket avec son ID
+async function addTicketDirect(ticket) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['tickets'], 'readwrite');
+        const store = transaction.objectStore('tickets');
+        const request = store.put(ticket);
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+// Toast notification
+function showToast(message, duration = 3000) {
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) existingToast.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('show'), 10);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
 }
 
 // ==================== Modal ====================
