@@ -33,11 +33,11 @@
             </div>
             
             <div class="stats-container">
-                <div class="stat-bubble success">
+                <div class="stat-bubble success clickable" onclick="showRankingPage()">
                     <span class="stat-label">🏆 Meilleur Jeu</span>
                     <span class="stat-value small" id="best-game">-</span>
                 </div>
-                <div class="stat-bubble danger">
+                <div class="stat-bubble danger clickable" onclick="showRankingPage()">
                     <span class="stat-label">📉 Pire Jeu</span>
                     <span class="stat-value small" id="worst-game">-</span>
                 </div>
@@ -131,87 +131,362 @@
         </div>
 
         <!-- Page Paramètres -->
-        <div id="settings-page" class="page">
-            <header>
-                <button class="icon-btn back-btn" onclick="goHome()">←</button>
-                <h1>Paramètres</h1>
-                <div class="spacer"></div>
-            </header>
-            
-            <div class="settings-container">
-                <div class="settings-section">
-                    <h3>📊 Statistiques globales</h3>
-                    <div class="settings-item">
-                        <span>Nombre total de jeux</span>
-                        <span id="stats-total-games">0</span>
-                    </div>
-                    <div class="settings-item">
-                        <span>Tickets achetés au total</span>
-                        <span id="stats-total-tickets">0</span>
-                    </div>
-                    <div class="settings-item">
-                        <span>Tickets gagnants</span>
-                        <span id="stats-winning-tickets">0</span>
-                    </div>
-                </div>
+<div id="settings-page" class="page">
+    <header>
+        <button class="icon-btn back-btn" onclick="goHome()">←</button>
+        <h1>Paramètres</h1>
+        <div class="spacer"></div>
+    </header>
 
-                <!-- NOUVELLE SECTION EXPORT/IMPORT -->
-                <div class="settings-section">
-                    <h3>📦 Sauvegarde des données</h3>
-                    <p class="settings-description">Exportez vos données pour les sauvegarder ou les transférer.</p>
-                    
-                    <div class="settings-buttons">
-                        <button class="btn-export" onclick="exportData()">
-                            📤 Exporter les données
-                        </button>
-                        
-                        <label class="btn-import">
-                            📥 Importer des données
-                            <input type="file" id="import-file" accept=".json" onchange="importData(event)" hidden>
-                        </label>
-                    </div>
-                    
-                    <p class="settings-warning">⚠️ L'import remplacera toutes vos données !</p>
-                </div>
-                
-                <div class="settings-section">
-                    <h3>ℹ️ À propos</h3>
-                    <div class="settings-item">
-                        <span>Version</span>
-                        <span>1.2.0</span>
-                    </div>
-                    <div class="settings-item">
-                        <span>Application</span>
-                        <span>GRAGA ! (GRAttage GAin !)</span>
-                    </div>
-                </div>
-                
-                <div class="copyright">
-                    © Tous droits réservés<br>
-                    LEROY Aurélien - 2026
-                </div>
+    <div class="settings-container">
+        <div class="settings-section">
+            <h3>📊 Statistiques globales</h3>
+            <div class="settings-item">
+                <span>Nombre total de jeux</span>
+                <span id="stats-total-games">0</span>
+            </div>
+            <div class="settings-item">
+                <span>Tickets achetés au total</span>
+                <span id="stats-total-tickets">0</span>
+            </div>
+            <div class="settings-item">
+                <span>Tickets gagnants</span>
+                <span id="stats-winning-tickets">0</span>
+            </div>
+        </div>
 
-                <div class="settings-section danger-zone">
-                    <h3>⚠️ Réinitialiser l'application ⚠️</h3>
-                    <button class="btn-danger" onclick="confirmResetAll()">
-                        Réinitialiser toutes les données
-                    </button>
+        <!-- SECTION EXPORT/IMPORT -->
+        <div class="settings-section">
+            <h3>📦 Sauvegarde des données</h3>
+            <p class="settings-description">Exportez vos données pour les sauvegarder ou les transférer.</p>
+
+            <div class="settings-buttons">
+                <button class="btn-export" onclick="exportData()">
+                    📤 Exporter les données
+                </button>
+
+                <label class="btn-import">
+                    📥 Importer des données
+                    <input type="file" id="import-file" accept=".json" onchange="importData(event)" hidden>
+                </label>
+            </div>
+
+            <p class="settings-warning">⚠️ L'import remplacera toutes vos données !</p>
+        </div>
+
+        <div class="settings-section">
+            <h3>ℹ️ À propos</h3>
+            <div class="settings-item">
+                <span>Version</span>
+                <span>1.3.0</span>
+            </div>
+            <div class="settings-item">
+                <span>Application</span>
+                <span>GRAGA ! (GRAttage GAin !)</span>
+            </div>
+        </div>
+
+        <div class="copyright">
+            © Tous droits réservés<br>
+            LEROY Aurélien - 2026
+        </div>
+
+        <div class="settings-section danger-zone">
+            <h3>⚠️ Réinitialiser l'application ⚠️</h3>
+            <button class="btn-danger" onclick="confirmResetAll()">
+                Réinitialiser toutes les données
+            </button>
+        </div>
+    </div>
+</div>
+<!-- FIN Page Paramètres -->
+
+<!-- Page Classement (SÉPARÉE) -->
+<div id="ranking-page" class="page">
+    <header>
+        <button class="icon-btn back-btn" onclick="goHome()">←</button>
+        <h1>🏆 Classement</h1>
+        <div class="spacer"></div>
+    </header>
+
+    <div class="ranking-content">
+        <!-- Tableau des positions par critère -->
+        <div class="ranking-section">
+            <h2>📊 Par critère</h2>
+            <div class="ranking-table-container">
+                <table class="ranking-table">
+                    <thead>
+                        <tr>
+                            <th>Pos.</th>
+                            <th>⚖️ Équilibré</th>
+                            <th>💰 Rentabilité</th>
+                            <th>🎯 Régularité</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ranking-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Score global -->
+        <div class="ranking-section">
+            <h2>🏅 Score Global</h2>
+            <div id="global-ranking-list" class="global-ranking-list">
+            </div>
+        </div>
+
+        <!-- Légende -->
+        <div class="ranking-section legend-section">
+            <h2>📖 Légende</h2>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <span class="legend-icon">⚖️</span>
+                    <div>
+                        <strong>Équilibré</strong>
+                        <p>Compromis entre gains et fréquence</p>
+                    </div>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-icon">💰</span>
+                    <div>
+                        <strong>Rentabilité</strong>
+                        <p>Favorise les gros gains</p>
+                    </div>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-icon">🎯</span>
+                    <div>
+                        <strong>Régularité</strong>
+                        <p>Favorise les gains fréquents</p>
+                    </div>
+                </div>
+            </div>
+            <div class="scoring-info">
+                <p><strong>Points :</strong> 🥇 = 3 pts | 🥈 = 2 pts | 🥉 = 1 pt</p>
+            </div>
+        </div>
+
+<!-- Section Méthodologie -->
+<div class="ranking-section methodology-section">
+    <h2>🧮 Comment ça marche ?</h2>
+    
+    <!-- Les 3 scores -->
+    <div class="methodology-block">
+        <h3>Les 3 scores calculés</h3>
+        
+        <div class="score-explanation">
+            <div class="score-header">
+                <span class="score-icon">⚖️</span>
+                <strong>Score Équilibré</strong>
+            </div>
+            <div class="score-formula">
+                <code>(Gains - Mises) × Taux de gain</code>
+            </div>
+            <p class="score-desc">Combine rentabilité ET régularité. Un jeu doit être rentable et gagner souvent.</p>
+            <div class="score-example">
+                <span class="example-label">Exemple :</span>
+                <span>Misé 100€, Gagné 150€, 10 tickets dont 6 gagnants</span>
+                <span class="example-calc">(150 - 100) × 0.6 = <strong>30 pts</strong></span>
+            </div>
+        </div>
+
+        <div class="score-explanation">
+            <div class="score-header">
+                <span class="score-icon">💰</span>
+                <strong>Score Rentabilité</strong>
+            </div>
+            <div class="score-formula">
+                <code>((Gains / Mises) - 1) × 100</code>
+            </div>
+            <p class="score-desc">Mesure le pourcentage de profit. Ignore la fréquence des gains.</p>
+            <div class="score-example">
+                <span class="example-label">Exemple :</span>
+                <span>Misé 100€, Gagné 150€</span>
+                <span class="example-calc">((150 / 100) - 1) × 100 = <strong>+50%</strong></span>
+            </div>
+        </div>
+
+        <div class="score-explanation">
+            <div class="score-header">
+                <span class="score-icon">🎯</span>
+                <strong>Score Régularité</strong>
+            </div>
+            <div class="score-formula">
+                <code>(Tickets gagnants / Total tickets) × 100</code>
+            </div>
+            <p class="score-desc">Mesure la fréquence des gains. Ignore le montant gagné.</p>
+            <div class="score-example">
+                <span class="example-label">Exemple :</span>
+                <span>10 tickets joués, 6 gagnants</span>
+                <span class="example-calc">6 / 10 × 100 = <strong>60%</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Système de points -->
+    <div class="methodology-block">
+        <h3>🏅 Système de médailles</h3>
+        <p class="method-intro">Chaque jeu est classé dans les 3 catégories. Les médailles rapportent des points :</p>
+        
+        <div class="medals-points">
+            <div class="medal-point">
+                <span class="medal">🥇</span>
+                <span class="points">3 pts</span>
+            </div>
+            <div class="medal-point">
+                <span class="medal">🥈</span>
+                <span class="points">2 pts</span>
+            </div>
+            <div class="medal-point">
+                <span class="medal">🥉</span>
+                <span class="points">1 pt</span>
+            </div>
+        </div>
+
+        <div class="score-example global-example">
+            <span class="example-label">Exemple de calcul global :</span>
+            <div class="example-detail">
+                <span>🥇 en Équilibré + 🥈 en Rentabilité + 🥉 en Régularité</span>
+                <span class="example-calc">3 + 2 + 1 = <strong>6 pts</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ce qui est pris en compte -->
+    <div class="methodology-block">
+        <h3>📋 Données prises en compte</h3>
+        
+        <div class="data-list">
+            <div class="data-item included">
+                <span class="data-icon">✅</span>
+                <div class="data-info">
+                    <strong>Total misé</strong>
+                    <span>Somme de toutes les mises enregistrées</span>
+                </div>
+            </div>
+            <div class="data-item included">
+                <span class="data-icon">✅</span>
+                <div class="data-info">
+                    <strong>Total gagné</strong>
+                    <span>Somme de tous les gains (0€ si perdant)</span>
+                </div>
+            </div>
+            <div class="data-item included">
+                <span class="data-icon">✅</span>
+                <div class="data-info">
+                    <strong>Nombre de tickets</strong>
+                    <span>Total des tickets joués</span>
+                </div>
+            </div>
+            <div class="data-item included">
+                <span class="data-icon">✅</span>
+                <div class="data-info">
+                    <strong>Tickets gagnants</strong>
+                    <span>Tickets avec gain > 0€</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal de confirmation -->
-    <div id="modal" class="modal hidden">
-        <div class="modal-content">
-            <h3 id="modal-title">Confirmation</h3>
-            <p id="modal-message">Êtes-vous sûr ?</p>
-            <div class="modal-buttons">
-                <button class="btn-secondary" onclick="closeModal()">Annuler</button>
-                <button class="btn-danger" id="modal-confirm">Confirmer</button>
+    <!-- Conditions minimum -->
+    <div class="methodology-block">
+        <h3>⚠️ Conditions de classement</h3>
+        
+        <div class="conditions-list">
+            <div class="condition-item">
+                <span class="condition-icon">🎫</span>
+                <div class="condition-info">
+                    <strong>Minimum 3 tickets</strong>
+                    <p>Un jeu doit avoir au moins 3 tickets enregistrés pour apparaître dans le classement.</p>
+                </div>
+            </div>
+            <div class="condition-item">
+                <span class="condition-icon">💶</span>
+                <div class="condition-info">
+                    <strong>Mise totale > 0€</strong>
+                    <p>Les jeux sans mise enregistrée sont exclus du calcul.</p>
+                </div>
+            </div>
+            <div class="condition-item">
+                <span class="condition-icon">🔄</span>
+                <div class="condition-info">
+                    <strong>Mise à jour en temps réel</strong>
+                    <p>Le classement se recalcule automatiquement à chaque nouveau ticket.</p>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Exemple complet -->
+    <div class="methodology-block example-block">
+        <h3>📊 Exemple complet</h3>
+        
+        <div class="full-example">
+            <div class="example-game">
+                <div class="example-game-header">
+                    <span class="example-game-icon">🎰</span>
+                    <strong>Numéro 7 Fétiche</strong>
+                </div>
+                <div class="example-game-stats">
+                    <div class="stat-row">
+                        <span>Tickets joués :</span>
+                        <strong>25</strong>
+                    </div>
+                    <div class="stat-row">
+                        <span>Tickets gagnants :</span>
+                        <strong>12</strong>
+                    </div>
+                    <div class="stat-row">
+                        <span>Total misé :</span>
+                        <strong>75,00 €</strong>
+                    </div>
+                    <div class="stat-row">
+                        <span>Total gagné :</span>
+                        <strong>95,00 €</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-calculations">
+                <div class="calc-item">
+                    <span class="calc-label">⚖️ Équilibré :</span>
+                    <span class="calc-formula">(95 - 75) × (12/25)</span>
+                    <span class="calc-result">= 20 × 0.48 = <strong>9.6 pts</strong></span>
+                </div>
+                <div class="calc-item">
+                    <span class="calc-label">💰 Rentabilité :</span>
+                    <span class="calc-formula">((95/75) - 1) × 100</span>
+                    <span class="calc-result">= 0.267 × 100 = <strong>+26.7%</strong></span>
+                </div>
+                <div class="calc-item">
+                    <span class="calc-label">🎯 Régularité :</span>
+                    <span class="calc-formula">(12/25) × 100</span>
+                    <span class="calc-result">= <strong>48%</strong></span>
+                </div>
+            </div>
+
+            <div class="example-result">
+                <p>Si ce jeu obtient : 🥇 Équilibré + 🥇 Rentabilité + 🥈 Régularité</p>
+                <p class="final-score">Score global : 3 + 3 + 2 = <strong>8 pts</strong></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FIN Page Classement -->
+
+<!-- Modal de confirmation -->
+<div id="modal" class="modal hidden">
+    <div class="modal-content">
+        <h3 id="modal-title">Confirmation</h3>
+        <p id="modal-message">Êtes-vous sûr ?</p>
+        <div class="modal-buttons">
+            <button class="btn-secondary" onclick="closeModal()">Annuler</button>
+            <button class="btn-danger" id="modal-confirm">Confirmer</button>
+        </div>
+    </div>
+</div>
 
     <script src="app.js"></script>
 </body>
