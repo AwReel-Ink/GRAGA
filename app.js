@@ -1,4 +1,4 @@
-// ==================== GraGa! V-1.2.0 ====================
+// ==================== GraGa! V-1.3.0 ====================
 // ==================== Configuration IndexedDB ====================
 const DB_NAME = 'GrattageTrackerDB';
 const DB_VERSION = 1;
@@ -209,20 +209,23 @@ async function loadHomePage() {
 
     for (const game of games) {
         const gameTickets = allTickets.filter(t => t.gameId === game.id);
-        const gameGains = gameTickets.reduce((sum, t) => sum + t.gain, 0);
-        const gameCost = gameTickets.length * game.ticketPrice;
+        const definedTickets = gameTickets.filter(t => t.gain !== null && t.gain !== undefined);
+        const gameGains = definedTickets.reduce((sum, t) => sum + t.gain, 0);
+        const gameCost = definedTickets.length * game.ticketPrice;
         const profit = gameGains - gameCost;
+        const winCount = definedTickets.filter(t => t.gain > 0).length;
 
         totalGains += gameGains;
         totalSpent += gameCost;
 
         gameStats.push({
             ...game,
-            ticketCount: gameTickets.length,
+            ticketCount: definedTickets.length,
             totalGains: gameGains,
             totalCost: gameCost,
             profit: profit,
-            avgGain: gameTickets.length > 0 ? gameGains / gameTickets.length : 0
+            winCount: winCount,
+            avgGain: definedTickets.length > 0 ? gameGains / definedTickets.length : 0
         });
     }
 
@@ -230,21 +233,38 @@ async function loadHomePage() {
     document.getElementById('total-gains').textContent = formatCurrency(totalGains);
     document.getElementById('total-spent').textContent = formatCurrency(totalSpent);
 
-    // Meilleur et pire jeu (basé sur le profit)
+    // === NOUVEAU : Calcul du classement par médailles ===
     const gamesWithTickets = gameStats.filter(g => g.ticketCount > 0);
     
-    if (gamesWithTickets.length > 0) {
-        const bestGame = gamesWithTickets.reduce((a, b) => a.profit > b.profit ? a : b);
-        const worstGame = gamesWithTickets.reduce((a, b) => a.profit < b.profit ? a : b);
+    // Stocker pour la page classement
+    window.currentGameStats = gameStats;
+    window.currentRankings = calculateRankings(gamesWithTickets);
 
-        document.getElementById('best-game').textContent = `${bestGame.name} (${formatCurrency(bestGame.profit)})`;
-        document.getElementById('worst-game').textContent = `${worstGame.name} (${formatCurrency(worstGame.profit)})`;
+    if (gamesWithTickets.length > 0) {
+        const { globalRanking } = window.currentRankings;
+        
+        if (globalRanking.length > 0) {
+            const bestGame = globalRanking[0];
+            const worstGame = globalRanking[globalRanking.length - 1];
+            
+            const bestMedals = `🥇${bestGame.gold} 🥈${bestGame.silver} 🥉${bestGame.bronze}`;
+            const worstMedals = `🥇${worstGame.gold} 🥈${worstGame.silver} 🥉${worstGame.bronze}`;
+            
+            document.getElementById('best-game').innerHTML = `
+                <span class="clickable-stat" onclick="showRankingPage()">${bestGame.name}</span>
+                <small>${bestMedals}</small>
+            `;
+            document.getElementById('worst-game').innerHTML = `
+                <span class="clickable-stat" onclick="showRankingPage()">${worstGame.name}</span>
+                <small>${worstMedals}</small>
+            `;
+        }
     } else {
         document.getElementById('best-game').textContent = '-';
         document.getElementById('worst-game').textContent = '-';
     }
 
-    // Afficher la liste des jeux
+    // Afficher la liste des jeux (inchangé)
     const gamesList = document.getElementById('games-list');
 
     if (games.length === 0) {
@@ -647,22 +667,33 @@ async function exportData() {
         };
 
         const jsonString = JSON.stringify(exportData, null, 2);
-        const blob = new Blob([jsonString], { type: 'application/json' });
-
+        
         const date = new Date();
         const dateStr = date.toISOString().split('T')[0];
         const fileName = `graga-backup-${dateStr}.json`;
 
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        showToast('✅ Export réussi !');
+        // Vérifier si on est sur Capacitor (Android)
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
+            // Android : utiliser le menu de partage
+            await window.Capacitor.Plugins.Share.share({
+                title: 'Backup GraGa!',
+                text: jsonString,
+                dialogTitle: 'Sauvegarder vers...'
+            });
+            showToast('✅ Choisissez où sauvegarder');
+        } else {
+            // Web classique : téléchargement direct
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('✅ Export réussi !');
+        }
 
     } catch (error) {
         console.error('Erreur export:', error);
@@ -803,6 +834,134 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// ==================== Calcul des Scores ====================
+function calculateScores(ticketCount, totalGains, totalCost, winCount) {
+    if (totalCost === 0 || ticketCount === 0) {
+        return { balanced: 0, profitability: 0, regularity: 0 };
+    }
+
+    const ratio = totalGains / totalCost;
+    const winRate = winCount / ticketCount; // ✅ Vrai taux de victoire
+
+    return {
+        balanced: ratio * winRate,
+        profitability: Math.pow(ratio, 2) * winRate,
+        regularity: ratio * Math.pow(winRate, 2)
+    };
+}
+
+function calculateRankings(gameStats) {
+    if (gameStats.length === 0) {
+        return { rankings: { byBalanced: [], byProfit: [], byRegular: [] }, globalRanking: [] };
+    }
+
+    // Calculer les scores pour chaque jeu
+    const gamesWithScores = gameStats.map(game => ({
+        ...game,
+        scores: calculateScores(
+            game.ticketCount, 
+            game.totalGains, 
+            game.totalCost,
+            game.winCount || 0  // ✅ Passer winCount
+        )
+    }));
+
+    // Trier par chaque critère
+    const byBalanced = [...gamesWithScores].sort((a, b) => b.scores.balanced - a.scores.balanced);
+    const byProfit = [...gamesWithScores].sort((a, b) => b.scores.profitability - a.scores.profitability);
+    const byRegular = [...gamesWithScores].sort((a, b) => b.scores.regularity - a.scores.regularity);
+
+    // Compter les médailles
+    const medals = {};
+    gameStats.forEach(g => {
+        medals[g.id] = { id: g.id, gold: 0, silver: 0, bronze: 0, name: g.name };
+    });
+
+    // Attribuer les médailles (seulement si score > 0)
+    [byBalanced, byProfit, byRegular].forEach(ranking => {
+        if (ranking[0] && ranking[0].scores.balanced > 0) medals[ranking[0].id].gold++;
+        if (ranking[1] && ranking[1].scores.balanced > 0) medals[ranking[1].id].silver++;
+        if (ranking[2] && ranking[2].scores.balanced > 0) medals[ranking[2].id].bronze++;
+    });
+
+    // Calculer points totaux et trier
+    const globalRanking = Object.values(medals)
+        .map(m => ({
+            ...m,
+            points: (m.gold * 3) + (m.silver * 2) + (m.bronze * 1)
+        }))
+        .sort((a, b) => {
+            if (b.points !== a.points) return b.points - a.points;
+            if (b.gold !== a.gold) return b.gold - a.gold;
+            if (b.silver !== a.silver) return b.silver - a.silver;
+            return b.bronze - a.bronze;
+        });
+
+    return {
+        rankings: { byBalanced, byProfit, byRegular },
+        globalRanking
+    };
+}
+
+// ==================== Page Classement ====================  ← ICI
+function showRankingPage() {
+    showPage('ranking-page');
+    loadRankingPage();
+}
+
+function loadRankingPage() {
+    const rankings = window.currentRankings;
+
+    if (!rankings || !rankings.globalRanking || rankings.globalRanking.length === 0) {
+        document.getElementById('ranking-table-body').innerHTML = `
+            <tr><td colspan="4" class="empty-state">Aucune donnée disponible</td></tr>
+        `;
+        document.getElementById('global-ranking-list').innerHTML = `
+            <p class="empty-state">Ajoutez des tickets pour voir le classement</p>
+        `;
+        return;
+    }
+
+    const { byBalanced, byProfit, byRegular } = rankings.rankings;
+    const maxRows = Math.max(byBalanced.length, byProfit.length, byRegular.length);
+
+    // Générer le tableau par critère
+    let tableHTML = '';
+    for (let i = 0; i < maxRows; i++) {
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
+        const balancedGame = byBalanced[i];
+        const profitGame = byProfit[i];
+        const regularGame = byRegular[i];
+
+        tableHTML += `
+            <tr>
+                <td class="rank-cell">${medal}</td>
+                <td>${balancedGame ? escapeHtml(balancedGame.name) : '-'}</td>
+                <td>${profitGame ? escapeHtml(profitGame.name) : '-'}</td>
+                <td>${regularGame ? escapeHtml(regularGame.name) : '-'}</td>
+            </tr>
+        `;
+    }
+    document.getElementById('ranking-table-body').innerHTML = tableHTML;
+
+    // Générer le classement global
+    let globalHTML = '';
+    rankings.globalRanking.forEach((game, index) => {
+        const position = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+        const medalClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+
+        globalHTML += `
+            <div class="global-rank-item ${medalClass}">
+                <span class="global-position">${position}</span>
+                <span class="global-name">${escapeHtml(game.name)}</span>
+                <span class="global-medals">🥇${game.gold} 🥈${game.silver} 🥉${game.bronze}</span>
+                <span class="global-points">${game.points} pts</span>
+            </div>
+        `;
+    });
+    document.getElementById('global-ranking-list').innerHTML = globalHTML;
 }
 
 // ==================== Service Worker & PWA ====================
