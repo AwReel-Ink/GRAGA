@@ -1,4 +1,4 @@
-/* Graga! V1.2.0 */
+/* Graga! V1.3.0 */
 * {
     margin: 0;
     padding: 0;
@@ -933,4 +933,715 @@ header h1 {
     padding: 8px;
     background: rgba(245, 158, 11, 0.1);
     border-radius: 8px;
+}
+
+/* ==================== Page Classement - Version améliorée ==================== */
+#ranking-page {
+    min-height: 100vh;
+}
+
+.ranking-content {
+    padding: 1rem;
+    padding-bottom: 6rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Sections */
+.ranking-section {
+    margin-bottom: 1.5rem; /* Réduit de 2rem à 1.5rem */
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.25rem;
+    backdrop-filter: blur(10px);
+}
+
+.ranking-section h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1.2rem;
+    color: #fff;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+    text-align: center;
+}
+
+/* ===== Tableau de classement - Sans scroll ===== */
+.ranking-table-container {
+    overflow-x: visible;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.5rem;
+}
+
+.ranking-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.8rem;
+    table-layout: fixed;
+}
+
+.ranking-table th {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 0.75rem 0.4rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.7rem;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.3;
+}
+
+.ranking-table th:first-child {
+    border-radius: 8px 0 0 8px;
+    width: 2.5rem;
+}
+
+.ranking-table th:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+.ranking-table td {
+    padding: 0.6rem 0.4rem;
+    text-align: center;
+    color: #e0e0e0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    vertical-align: middle;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.3;
+    font-size: 0.75rem;
+}
+
+.ranking-table tr:last-child td {
+    border-bottom: none;
+}
+
+.ranking-table tr:hover td {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Colonne position - étroite et fixe */
+.ranking-table td:first-child {
+    font-size: 1rem;
+    font-weight: bold;
+    width: 2.5rem;
+    color: #888;
+    white-space: nowrap;
+}
+
+/* Médailles colorées */
+.ranking-table tr:nth-child(1) td:first-child { color: #ffd700; }
+.ranking-table tr:nth-child(2) td:first-child { color: #c0c0c0; }
+.ranking-table tr:nth-child(3) td:first-child { color: #cd7f32; }
+
+/* Colonnes de noms - flexibles avec retour à la ligne */
+.ranking-table td:not(:first-child) {
+    font-size: 0.72rem;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+}
+
+/* ===== Score Global ===== */
+.global-ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.global-rank-item {
+    display: grid;
+    grid-template-columns: 3rem 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
+}
+
+.global-rank-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(4px);
+}
+
+/* Podium - Or */
+.global-rank-item.rank-1,
+.global-rank-item.champion {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.08));
+    border: 1px solid rgba(255, 215, 0, 0.4);
+}
+
+/* Podium - Argent */
+.global-rank-item.rank-2 {
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.2), rgba(192, 192, 192, 0.08));
+    border: 1px solid rgba(192, 192, 192, 0.4);
+}
+
+/* Podium - Bronze */
+.global-rank-item.rank-3 {
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.2), rgba(205, 127, 50, 0.08));
+    border: 1px solid rgba(205, 127, 50, 0.4);
+}
+
+.rank-position {
+    font-size: 1.4rem;
+    font-weight: bold;
+    text-align: center;
+    color: #888;
+}
+
+.global-rank-item.rank-1 .rank-position,
+.global-rank-item.champion .rank-position { color: #ffd700; }
+.global-rank-item.rank-2 .rank-position { color: #c0c0c0; }
+.global-rank-item.rank-3 .rank-position { color: #cd7f32; }
+
+.rank-info {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.rank-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.3rem;
+}
+
+.rank-medals {
+    font-size: 0.75rem;
+    color: #aaa;
+    letter-spacing: 0.5px;
+}
+
+.rank-points {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #4ade80;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.global-rank-item.rank-1 .rank-points,
+.global-rank-item.champion .rank-points { color: #ffd700; }
+.global-rank-item.rank-2 .rank-points { color: #c0c0c0; }
+.global-rank-item.rank-3 .rank-points { color: #cd7f32; }
+
+/* ===== Légende ===== */
+.legend-section {
+    background: rgba(255, 255, 255, 0.05) !important;
+    margin-bottom: 1.5rem;
+}
+
+.legend-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+
+.legend-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.legend-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.legend-item strong {
+    display: block;
+    font-size: 0.9rem;
+    color: #fff;
+    margin-bottom: 0.3rem;
+}
+
+.legend-item p {
+    font-size: 0.75rem;
+    color: #aaa;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.scoring-info {
+    margin-top: 1rem; 
+    margin-bottom: 0; 
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    text-align: center;
+}
+
+.scoring-info p {
+    font-size: 0.85rem;
+    color: #ccc;
+    margin: 0;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 400px) {
+    .ranking-content {
+        padding: 0.75rem;
+    }
+
+    .ranking-section {
+        padding: 1rem;
+    }
+
+    .ranking-table {
+        font-size: 0.7rem;
+    }
+
+    .ranking-table th {
+        padding: 0.6rem 0.25rem;
+        font-size: 0.65rem;
+    }
+
+    .ranking-table th:first-child {
+        width: 2rem;
+    }
+
+    .ranking-table td {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.68rem;
+    }
+
+    .ranking-table td:first-child {
+        font-size: 0.85rem;
+        width: 2rem;
+    }
+
+    .global-rank-item {
+        grid-template-columns: 2.5rem 1fr auto;
+        gap: 0.75rem;
+        padding: 0.85rem 1rem;
+    }
+
+    .rank-position {
+        font-size: 1.2rem;
+    }
+
+    .rank-name {
+        font-size: 0.9rem;
+    }
+
+    .rank-points {
+        font-size: 1rem;
+    }
+
+    .legend-items {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 350px) {
+    .ranking-table th,
+    .ranking-table td {
+        padding: 0.4rem 0.2rem;
+        font-size: 0.62rem;
+    }
+
+    .ranking-table td:first-child {
+        font-size: 0.75rem;
+    }
+}
+
+/* ==================== Méthodologie ==================== */
+.methodology-section {
+    background: rgba(255, 255, 255, 0.05) !important;
+    margin-top: 0; 
+}
+
+.methodology-block {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.methodology-block:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.methodology-block h3 {
+    font-size: 1rem;
+    color: #fff;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.method-intro {
+    color: #aaa;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+/* Score explanations */
+.score-explanation {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.score-explanation:last-of-type {
+    margin-bottom: 0;
+}
+
+.score-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.score-icon {
+    font-size: 1.5rem;
+}
+
+.score-header strong {
+    font-size: 0.95rem;
+    color: #fff;
+}
+
+.score-formula {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.score-formula code {
+    font-family: 'Courier New', monospace;
+    color: #4ade80;
+    font-size: 0.85rem;
+}
+
+.score-desc {
+    font-size: 0.8rem;
+    color: #aaa;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.score-example {
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.2);
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-size: 0.8rem;
+}
+
+.example-label {
+    display: block;
+    color: #4ade80;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+}
+
+.score-example span {
+    display: block;
+    color: #ccc;
+    margin-bottom: 0.3rem;
+}
+
+.example-calc {
+    color: #fff !important;
+    font-weight: 500;
+    margin-top: 0.5rem !important;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.example-calc strong {
+    color: #4ade80;
+}
+
+/* Medals points */
+.medals-points {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin: 1.5rem 0;
+}
+
+.medal-point {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.medal-point .medal {
+    font-size: 2.5rem;
+}
+
+.medal-point .points {
+    font-weight: bold;
+    color: #fff;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+}
+
+.global-example {
+    margin-top: 1rem;
+}
+
+.example-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+/* Data list */
+.data-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.data-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.data-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.data-info strong {
+    display: block;
+    color: #fff;
+    font-size: 0.9rem;
+    margin-bottom: 0.2rem;
+}
+
+.data-info span {
+    font-size: 0.75rem;
+    color: #aaa;
+}
+
+/* Conditions */
+.conditions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.condition-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 193, 7, 0.08);
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    border-radius: 12px;
+}
+
+.condition-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.condition-info strong {
+    display: block;
+    color: #ffc107;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+.condition-info p {
+    font-size: 0.8rem;
+    color: #aaa;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Full example */
+.example-block {
+    background: rgba(33, 150, 243, 0.08) !important;
+    border: 1px solid rgba(33, 150, 243, 0.2);
+    border-radius: 12px;
+    padding: 1.25rem !important;
+}
+
+.full-example {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.example-game {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.example-game-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.example-game-icon {
+    font-size: 1.5rem;
+}
+
+.example-game-header strong {
+    color: #fff;
+    font-size: 1rem;
+}
+
+.example-game-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.4rem 0.6rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    font-size: 0.8rem;
+}
+
+.stat-row span {
+    color: #aaa;
+}
+
+.stat-row strong {
+    color: #fff;
+}
+
+.example-calculations {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.calc-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    font-size: 0.8rem;
+}
+
+.calc-label {
+    color: #fff;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.calc-formula {
+    color: #888;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+.calc-result {
+    color: #ccc;
+    text-align: right;
+}
+
+.calc-result strong {
+    color: #4ade80;
+}
+
+.example-result {
+    background: linear-gradient(135deg, rgba(74, 222, 128, 0.15), rgba(74, 222, 128, 0.05));
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.example-result p {
+    font-size: 0.85rem;
+    color: #ccc;
+    margin: 0 0 0.5rem 0;
+}
+
+.example-result .final-score {
+    font-size: 1rem;
+    color: #fff;
+    margin: 0;
+}
+
+.example-result .final-score strong {
+    color: #4ade80;
+    font-size: 1.2rem;
+}
+
+/* Responsive */
+@media (max-width: 400px) {
+    .methodology-block {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+    }
+
+    .score-explanation {
+        padding: 0.85rem;
+    }
+
+    .medals-points {
+        gap: 1rem;
+    }
+
+    .medal-point .medal {
+        font-size: 2rem;
+    }
+
+    .medal-point .points {
+        font-size: 0.85rem;
+    }
+
+    .example-game-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .calc-item {
+        grid-template-columns: 1fr;
+        gap: 0.3rem;
+        text-align: center;
+    }
+
+    .calc-label {
+        text-align: center;
+    }
+
+    .calc-result {
+        text-align: center;
+    }
 }
