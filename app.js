@@ -1,4 +1,4 @@
-// ==================== GraGa! V-1.3.0 ====================
+// ==================== GraGa! V-1.4.0 ====================
 // ==================== Configuration IndexedDB ====================
 const DB_NAME = 'GrattageTrackerDB';
 const DB_VERSION = 1;
@@ -843,12 +843,15 @@ function calculateScores(ticketCount, totalGains, totalCost, winCount) {
     }
 
     const ratio = totalGains / totalCost;
-    const winRate = winCount / ticketCount; // ✅ Vrai taux de victoire
+    const winRate = winCount / ticketCount;
+    
+    // ✅ Coefficient de confiance : atteint 100% à 10 tickets
+    const confidenceFactor = Math.min(ticketCount / 10, 1);
 
     return {
-        balanced: ratio * winRate,
-        profitability: Math.pow(ratio, 2) * winRate,
-        regularity: ratio * Math.pow(winRate, 2)
+        balanced: ratio * winRate * confidenceFactor,
+        profitability: Math.pow(ratio, 2) * winRate * confidenceFactor,
+        regularity: ratio * Math.pow(winRate, 2) * confidenceFactor
     };
 }
 
@@ -864,8 +867,10 @@ function calculateRankings(gameStats) {
             game.ticketCount, 
             game.totalGains, 
             game.totalCost,
-            game.winCount || 0  // ✅ Passer winCount
-        )
+            game.winCount || 0
+        ),
+        // ✅ Ajouter le coefficient pour l'affichage
+        confidence: Math.min(game.ticketCount / 10, 1)
     }));
 
     // Trier par chaque critère
@@ -876,14 +881,21 @@ function calculateRankings(gameStats) {
     // Compter les médailles
     const medals = {};
     gameStats.forEach(g => {
-        medals[g.id] = { id: g.id, gold: 0, silver: 0, bronze: 0, name: g.name };
+        medals[g.id] = { 
+            id: g.id, 
+            gold: 0, 
+            silver: 0, 
+            bronze: 0, 
+            name: g.name,
+            ticketCount: g.ticketCount  // ✅ Pour afficher l'info
+        };
     });
 
     // Attribuer les médailles (seulement si score > 0)
     [byBalanced, byProfit, byRegular].forEach(ranking => {
         if (ranking[0] && ranking[0].scores.balanced > 0) medals[ranking[0].id].gold++;
-        if (ranking[1] && ranking[1].scores.balanced > 0) medals[ranking[1].id].silver++;
-        if (ranking[2] && ranking[2].scores.balanced > 0) medals[ranking[2].id].bronze++;
+        if (ranking[1] && ranking[1].scores.profitability > 0) medals[ranking[1].id].silver++;  // ✅ Corrigé
+        if (ranking[2] && ranking[2].scores.regularity > 0) medals[ranking[2].id].bronze++;    // ✅ Corrigé
     });
 
     // Calculer points totaux et trier
@@ -927,6 +939,13 @@ function loadRankingPage() {
     const { byBalanced, byProfit, byRegular } = rankings.rankings;
     const maxRows = Math.max(byBalanced.length, byProfit.length, byRegular.length);
 
+    // ✅ Fonction helper pour afficher le nom + indicateur de confiance
+    const displayName = (game) => {
+        if (!game) return '-';
+        const confidenceIcon = game.confidence < 1 ? ' ⚠️' : '';
+        return escapeHtml(game.name) + confidenceIcon;
+    };
+
     // Générer le tableau par critère
     let tableHTML = '';
     for (let i = 0; i < maxRows; i++) {
@@ -938,9 +957,9 @@ function loadRankingPage() {
         tableHTML += `
             <tr>
                 <td class="rank-cell">${medal}</td>
-                <td>${balancedGame ? escapeHtml(balancedGame.name) : '-'}</td>
-                <td>${profitGame ? escapeHtml(profitGame.name) : '-'}</td>
-                <td>${regularGame ? escapeHtml(regularGame.name) : '-'}</td>
+                <td>${displayName(balancedGame)}</td>
+                <td>${displayName(profitGame)}</td>
+                <td>${displayName(regularGame)}</td>
             </tr>
         `;
     }
@@ -951,11 +970,14 @@ function loadRankingPage() {
     rankings.globalRanking.forEach((game, index) => {
         const position = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
         const medalClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+        
+        // ✅ Indicateur de confiance dans le classement global aussi
+        const confidenceIcon = game.ticketCount < 10 ? ' ⚠️' : '';
 
         globalHTML += `
             <div class="global-rank-item ${medalClass}">
                 <span class="global-position">${position}</span>
-                <span class="global-name">${escapeHtml(game.name)}</span>
+                <span class="global-name">${escapeHtml(game.name)}${confidenceIcon}</span>
                 <span class="global-medals">🥇${game.gold} 🥈${game.silver} 🥉${game.bronze}</span>
                 <span class="global-points">${game.points} pts</span>
             </div>
