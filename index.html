@@ -178,7 +178,7 @@
             <h3>ℹ️ À propos</h3>
             <div class="settings-item">
                 <span>Version</span>
-                <span>1.4.0</span>
+                <span>1.5.0</span>
             </div>
             <div class="settings-item">
                 <span>Application</span>
@@ -270,24 +270,24 @@
 <!-- Section Méthodologie -->
 <div class="ranking-section methodology-section">
     <h2>🧮 Comment ça marche ?</h2>
-    
+
     <!-- Les 3 scores -->
     <div class="methodology-block">
         <h3>Les 3 scores calculés</h3>
-        
+
         <div class="score-explanation">
             <div class="score-header">
-                <span class="score-icon">⚖️</span>
-                <strong>Score Équilibré</strong>
+                <span class="score-icon">🎯</span>
+                <strong>Score Régularité</strong>
             </div>
             <div class="score-formula">
-                <code>(Gains - Mises) × Taux de gain</code>
+                <code>% de tickets gagnants × Volume</code>
             </div>
-            <p class="score-desc">Combine rentabilité ET régularité. Un jeu doit être rentable et gagner souvent.</p>
+            <p class="score-desc">Mesure la fréquence des gains, peu importe le montant. Un gain de 1€ compte autant qu'un gain de 100€.</p>
             <div class="score-example">
                 <span class="example-label">Exemple :</span>
-                <span>Misé 100€, Gagné 150€, 10 tickets dont 6 gagnants</span>
-                <span class="example-calc">(150 - 100) × 0.6 = <strong>30 pts</strong></span>
+                <span>25 tickets joués, 8 gagnants (même pour 1€)</span>
+                <span class="example-calc">32% × log₁₀(26) = 32% × 1.41 = <strong>45.1 pts</strong></span>
             </div>
         </div>
 
@@ -297,38 +297,77 @@
                 <strong>Score Rentabilité</strong>
             </div>
             <div class="score-formula">
-                <code>((Gains / Mises) - 1) × 100</code>
+                <code>(Gains ÷ Mises - 1) × 100</code>
             </div>
-            <p class="score-desc">Mesure le pourcentage de profit. Ignore la fréquence des gains.</p>
+            <p class="score-desc">Mesure le retour sur investissement (ROI). Combien d'argent récupéré par rapport aux mises.</p>
             <div class="score-example">
                 <span class="example-label">Exemple :</span>
-                <span>Misé 100€, Gagné 150€</span>
-                <span class="example-calc">((150 / 100) - 1) × 100 = <strong>+50%</strong></span>
+                <span>Misé 10€, Gagné 15€</span>
+                <span class="example-calc">(15/10 - 1) × 100 = <strong>+50%</strong> de rentabilité</span>
             </div>
         </div>
 
         <div class="score-explanation">
             <div class="score-header">
-                <span class="score-icon">🎯</span>
-                <strong>Score Régularité</strong>
+                <span class="score-icon">⚖️</span>
+                <strong>Score Équilibré</strong>
             </div>
             <div class="score-formula">
-                <code>(Tickets gagnants / Total tickets) × 100</code>
+                <code>% gagnants × ROI × Fiabilité</code>
             </div>
-            <p class="score-desc">Mesure la fréquence des gains. Ignore le montant gagné.</p>
+            <p class="score-desc">Combine les deux : un jeu doit gagner souvent ET rapporter de l'argent. Idéal pour trouver le meilleur compromis.</p>
             <div class="score-example">
                 <span class="example-label">Exemple :</span>
-                <span>10 tickets joués, 6 gagnants</span>
-                <span class="example-calc">6 / 10 × 100 = <strong>60%</strong></span>
+                <span>60% de gains, ROI +44%, 5+ tickets</span>
+                <span class="example-calc">0.60 × 44 × 1.0 = <strong>26.4 pts</strong></span>
             </div>
+        </div>
+    </div>
+
+    <!-- Facteur de volume -->
+    <div class="methodology-block">
+        <h3>📊 Facteur de volume (Fiabilité)</h3>
+        <p class="method-intro">Plus vous avez de tickets sur un jeu, plus son classement est fiable :</p>
+
+        <div class="confidence-scale">
+            <div class="confidence-item">
+                <span class="confidence-tickets">1 ticket</span>
+                <div class="confidence-bar" style="width: 30%"></div>
+                <span class="confidence-percent">×0.30</span>
+            </div>
+            <div class="confidence-item">
+                <span class="confidence-tickets">3 tickets</span>
+                <div class="confidence-bar" style="width: 48%"></div>
+                <span class="confidence-percent">×0.48</span>
+            </div>
+            <div class="confidence-item">
+                <span class="confidence-tickets">5 tickets</span>
+                <div class="confidence-bar" style="width: 60%"></div>
+                <span class="confidence-percent">×0.78</span>
+            </div>
+            <div class="confidence-item">
+                <span class="confidence-tickets">10 tickets</span>
+                <div class="confidence-bar" style="width: 80%"></div>
+                <span class="confidence-percent">×1.04</span>
+            </div>
+            <div class="confidence-item full">
+                <span class="confidence-tickets">25+ tickets</span>
+                <div class="confidence-bar" style="width: 100%"></div>
+                <span class="confidence-percent">×1.41</span>
+            </div>
+        </div>
+
+        <div class="confidence-explanation">
+            <p><strong>⚠️</strong> indique un jeu avec moins de 5 tickets → classement provisoire</p>
+            <p>Un jeu avec 30% de gains sur 25 tickets est plus fiable qu'un jeu à 30% sur 3 tickets.</p>
         </div>
     </div>
 
     <!-- Système de points -->
     <div class="methodology-block">
         <h3>🏅 Système de médailles</h3>
-        <p class="method-intro">Chaque jeu est classé dans les 3 catégories. Les médailles rapportent des points :</p>
-        
+        <p class="method-intro">Chaque jeu est classé dans les 3 catégories. Seuls les 3 premiers de chaque catégorie obtiennent des médailles :</p>
+
         <div class="medals-points">
             <div class="medal-point">
                 <span class="medal">🥇</span>
@@ -347,8 +386,8 @@
         <div class="score-example global-example">
             <span class="example-label">Exemple de calcul global :</span>
             <div class="example-detail">
-                <span>🥇 en Équilibré + 🥈 en Rentabilité + 🥉 en Régularité</span>
-                <span class="example-calc">3 + 2 + 1 = <strong>6 pts</strong></span>
+                <span>🥇 en Équilibré + 🥈 en Rentabilité + 🥈 en Régularité</span>
+                <span class="example-calc">3 + 2 + 2 = <strong>7 pts</strong></span>
             </div>
         </div>
     </div>
@@ -356,7 +395,7 @@
     <!-- Ce qui est pris en compte -->
     <div class="methodology-block">
         <h3>📋 Données prises en compte</h3>
-        
+
         <div class="data-list">
             <div class="data-item included">
                 <span class="data-icon">✅</span>
@@ -376,43 +415,21 @@
                 <span class="data-icon">✅</span>
                 <div class="data-info">
                     <strong>Nombre de tickets</strong>
-                    <span>Total des tickets joués</span>
+                    <span>Total des tickets joués pour ce jeu</span>
                 </div>
             </div>
             <div class="data-item included">
                 <span class="data-icon">✅</span>
                 <div class="data-info">
                     <strong>Tickets gagnants</strong>
-                    <span>Tickets avec gain > 0€</span>
+                    <span>Tickets avec gain > 0€ (même 1€ compte !)</span>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Conditions minimum -->
-    <div class="methodology-block">
-        <h3>⚠️ Conditions de classement</h3>
-        
-        <div class="conditions-list">
-            <div class="condition-item">
-                <span class="condition-icon">🎫</span>
-                <div class="condition-info">
-                    <strong>Minimum 3 tickets</strong>
-                    <p>Un jeu doit avoir au moins 3 tickets enregistrés pour apparaître dans le classement.</p>
-                </div>
-            </div>
-            <div class="condition-item">
-                <span class="condition-icon">💶</span>
-                <div class="condition-info">
-                    <strong>Mise totale > 0€</strong>
-                    <p>Les jeux sans mise enregistrée sont exclus du calcul.</p>
-                </div>
-            </div>
-            <div class="condition-item">
-                <span class="condition-icon">🔄</span>
-                <div class="condition-info">
-                    <strong>Mise à jour en temps réel</strong>
-                    <p>Le classement se recalcule automatiquement à chaque nouveau ticket.</p>
+            <div class="data-item included">
+                <span class="data-icon">✅</span>
+                <div class="data-info">
+                    <strong>Ratio gains/mises (ROI)</strong>
+                    <span>> 1 = rentable | < 1 = déficitaire | = 1 = équilibre</span>
                 </div>
             </div>
         </div>
@@ -421,12 +438,12 @@
     <!-- Exemple complet -->
     <div class="methodology-block example-block">
         <h3>📊 Exemple complet</h3>
-        
+
         <div class="full-example">
             <div class="example-game">
                 <div class="example-game-header">
                     <span class="example-game-icon">🎰</span>
-                    <strong>Numéro 7 Fétiche</strong>
+                    <strong>Morpion Max</strong>
                 </div>
                 <div class="example-game-stats">
                     <div class="stat-row">
@@ -435,40 +452,149 @@
                     </div>
                     <div class="stat-row">
                         <span>Tickets gagnants :</span>
-                        <strong>12</strong>
+                        <strong>8</strong>
                     </div>
                     <div class="stat-row">
                         <span>Total misé :</span>
-                        <strong>75,00 €</strong>
+                        <strong>50,00 €</strong>
                     </div>
                     <div class="stat-row">
                         <span>Total gagné :</span>
-                        <strong>95,00 €</strong>
+                        <strong>36,00 €</strong>
+                    </div>
+                    <div class="stat-row">
+                        <span>Ratio (ROI) :</span>
+                        <strong>0.72</strong> <span class="stat-note">(perd 28%)</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Taux de gain :</span>
+                        <strong>32%</strong> <span class="stat-note">(8/25)</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Volume :</span>
+                        <strong>×1.41</strong> <span class="stat-note">(25 tickets = fiable)</span>
                     </div>
                 </div>
             </div>
 
             <div class="example-calculations">
                 <div class="calc-item">
-                    <span class="calc-label">⚖️ Équilibré :</span>
-                    <span class="calc-formula">(95 - 75) × (12/25)</span>
-                    <span class="calc-result">= 20 × 0.48 = <strong>9.6 pts</strong></span>
+                    <span class="calc-label">🎯 Régularité :</span>
+                    <span class="calc-formula">32% × 1.41</span>
+                    <span class="calc-result">= <strong>45.1 pts</strong></span>
                 </div>
                 <div class="calc-item">
                     <span class="calc-label">💰 Rentabilité :</span>
-                    <span class="calc-formula">((95/75) - 1) × 100</span>
-                    <span class="calc-result">= 0.267 × 100 = <strong>+26.7%</strong></span>
+                    <span class="calc-formula">(0.72 - 1) × 100</span>
+                    <span class="calc-result">= <strong>-28%</strong></span>
                 </div>
                 <div class="calc-item">
-                    <span class="calc-label">🎯 Régularité :</span>
-                    <span class="calc-formula">(12/25) × 100</span>
-                    <span class="calc-result">= <strong>48%</strong></span>
+                    <span class="calc-label">⚖️ Équilibré :</span>
+                    <span class="calc-formula">32% × (-28%) × 1.0</span>
+                    <span class="calc-result">= <strong>-8.96 pts</strong></span>
                 </div>
             </div>
 
-            <div class="example-result">
-                <p>Si ce jeu obtient : 🥇 Équilibré + 🥇 Rentabilité + 🥈 Régularité</p>
-                <p class="final-score">Score global : 3 + 3 + 2 = <strong>8 pts</strong></p>
+            <div class="example-note">
+                <p>✅ <strong>Régularité</strong> : Bon score car gagne régulièrement (32% sur 25 tickets)</p>
+                <p>❌ <strong>Rentabilité</strong> : Mauvais score car perd de l'argent (-28%)</p>
+                <p>⚖️ <strong>Équilibré</strong> : Score négatif (gagne souvent mais pas assez)</p>
+            </div>
+        </div>
+
+        <!-- Contre-exemple : jeu chanceux -->
+        <div class="full-example counter-example">
+            <div class="example-game">
+                <div class="example-game-header">
+                    <span class="example-game-icon">🍀</span>
+                    <strong>Astro Gémeaux ⚠️</strong>
+                </div>
+                <div class="example-game-stats">
+                    <div class="stat-row">
+                        <span>Tickets joués :</span>
+                        <strong>3</strong>
+                    </div>
+                    <div class="stat-row">
+                        <span>Tickets gagnants :</span>
+                        <strong>1</strong>
+                    </div>
+                    <div class="stat-row">
+                        <span>Total misé :</span>
+                        <strong>9,00 €</strong>
+                    </div>
+                    <div class="stat-row">
+                        <span>Total gagné :</span>
+                        <strong>9,00 €</strong>
+                    </div>
+                    <div class="stat-row">
+                        <span>Ratio (ROI) :</span>
+                        <strong>1.00</strong> <span class="stat-note">(équilibre)</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Taux de gain :</span>
+                        <strong>33%</strong> <span class="stat-note">(1/3)</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Volume :</span>
+                        <strong>×0.60</strong> <span class="stat-note">(3 tickets = peu fiable)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-calculations">
+                <div class="calc-item">
+                    <span class="calc-label">🎯 Régularité :</span>
+                    <span class="calc-formula">33% × 0.60</span>
+                    <span class="calc-result">= <strong>19.8 pts</strong></span>
+                </div>
+            </div>
+
+            <div class="example-note warning">
+                <p>⚠️ Malgré un meilleur taux (33% vs 32%), ce jeu est moins bien classé en Régularité que Morpion Max</p>
+                <p>→ Car 3 tickets ne prouvent rien, alors que 25 tickets confirment une tendance</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interprétation des résultats -->
+    <div class="methodology-block">
+        <h3>🎯 Comment lire le classement ?</h3>
+
+        <div class="interpretation-grid">
+            <div class="interpretation-item">
+                <div class="interp-header">
+                    <span class="interp-icon">🎯</span>
+                    <strong>Top Régularité</strong>
+                </div>
+                <p>Ces jeux vous font gagner <strong>le plus souvent</strong>, parfait pour le plaisir de jouer !</p>
+                <p class="interp-note">Même un petit gain de 1€ compte comme une victoire.</p>
+            </div>
+
+            <div class="interpretation-item">
+                <div class="interp-header">
+                    <span class="interp-icon">💰</span>
+                    <strong>Top Rentabilité</strong>
+                </div>
+                <p>Ces jeux vous rapportent <strong>le plus d'argent</strong> par rapport à vos mises.</p>
+                <p class="interp-note">Un ratio > 1 signifie que vous gagnez de l'argent.</p>
+            </div>
+
+            <div class="interpretation-item">
+                <div class="interp-header">
+                    <span class="interp-icon">⚖️</span>
+                    <strong>Top Équilibré</strong>
+                </div>
+                <p>Ces jeux combinent <strong>fréquence et rentabilité</strong>, le meilleur des deux mondes !</p>
+                <p class="interp-note">Recommandé pour une stratégie optimale.</p>
+            </div>
+
+            <div class="interpretation-item warning-item">
+                <div class="interp-header">
+                    <span class="interp-icon">⚠️</span>
+                    <strong>Jeux avec peu de données</strong>
+                </div>
+                <p>Moins de 5 tickets = classement provisoire.</p>
+                <p class="interp-note">Continuez à jouer pour confirmer la tendance !</p>
             </div>
         </div>
     </div>
