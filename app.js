@@ -1,4 +1,4 @@
-// ==================== GraGa! V-1.4.0 ====================
+// ==================== GraGa! V-1.5.0 ====================
 // ==================== Configuration IndexedDB ====================
 const DB_NAME = 'GrattageTrackerDB';
 const DB_VERSION = 1;
@@ -842,16 +842,42 @@ function calculateScores(ticketCount, totalGains, totalCost, winCount) {
         return { balanced: 0, profitability: 0, regularity: 0 };
     }
 
-    const ratio = totalGains / totalCost;
-    const winRate = winCount / ticketCount;
+    const ratio = totalGains / totalCost; // ROI
+    const winRate = winCount / ticketCount; // % de tickets gagnants
+
+    // Facteur de fiabilité basé sur le volume (pour départager les égalités)
+    const volumeFactor = Math.log10(ticketCount + 1); // 10 tickets = 1, 100 = 2, 500 = 2.7
     
-    // ✅ Coefficient de confiance : atteint 100% à 10 tickets
-    const confidenceFactor = Math.min(ticketCount / 10, 1);
+    // Fiabilité pour Équilibré : malus si moins de 5 tickets
+    const reliabilityForBalanced = ticketCount >= 5 
+        ? 1 
+        : Math.pow(ticketCount / 5, 1.5);
+
+    // Cas spécial : aucun ticket gagnant
+    if (winCount === 0) {
+        const lossMultiplier = 1 + (ticketCount * 0.1);
+        
+        return {
+            balanced: (ratio - 1) * 100 * reliabilityForBalanced,
+            profitability: (ratio - 1) * 100 * lossMultiplier,
+            regularity: -100 * volumeFactor // Plus de tickets perdants = on est SÛR que c'est mauvais
+        };
+    }
+
+    // ✅ RÉGULARITÉ : basée sur le % de tickets gagnants × fiabilité du volume
+    // Un jeu avec 32% de winRate sur 25 tickets bat un jeu à 33% sur 3 tickets
+    const regularityScore = winRate * volumeFactor * 100;
+
+    // ✅ RENTABILITÉ : ROI pur (ratio - 1 pour avoir le % de gain/perte)
+    const profitabilityScore = (ratio - 1) * 100;
+
+    // ✅ ÉQUILIBRÉ : combine les deux (gagne souvent ET rapporte)
+    const balancedScore = winRate * (ratio - 1) * 100 * reliabilityForBalanced;
 
     return {
-        balanced: ratio * winRate * confidenceFactor,
-        profitability: Math.pow(ratio, 2) * winRate * confidenceFactor,
-        regularity: ratio * Math.pow(winRate, 2) * confidenceFactor
+        balanced: balancedScore,
+        profitability: profitabilityScore,
+        regularity: regularityScore
     };
 }
 
@@ -869,11 +895,10 @@ function calculateRankings(gameStats) {
             game.totalCost,
             game.winCount || 0
         ),
-        // ✅ Ajouter le coefficient pour l'affichage
-        confidence: Math.min(game.ticketCount / 10, 1)
+        confidence: Math.min(game.ticketCount / 5, 1)
     }));
 
-    // Trier par chaque critère
+    // Trier par chaque critère (du meilleur au pire)
     const byBalanced = [...gamesWithScores].sort((a, b) => b.scores.balanced - a.scores.balanced);
     const byProfit = [...gamesWithScores].sort((a, b) => b.scores.profitability - a.scores.profitability);
     const byRegular = [...gamesWithScores].sort((a, b) => b.scores.regularity - a.scores.regularity);
@@ -887,18 +912,26 @@ function calculateRankings(gameStats) {
             silver: 0, 
             bronze: 0, 
             name: g.name,
-            ticketCount: g.ticketCount  // ✅ Pour afficher l'info
+            ticketCount: g.ticketCount,
+            totalScore: 0
         };
     });
 
-    // Attribuer les médailles (seulement si score > 0)
-    [byBalanced, byProfit, byRegular].forEach(ranking => {
-        if (ranking[0] && ranking[0].scores.balanced > 0) medals[ranking[0].id].gold++;
-        if (ranking[1] && ranking[1].scores.profitability > 0) medals[ranking[1].id].silver++;  // ✅ Corrigé
-        if (ranking[2] && ranking[2].scores.regularity > 0) medals[ranking[2].id].bronze++;    // ✅ Corrigé
+    // Attribuer les médailles (seulement si score > 0 = positif/gagnant)
+    [byBalanced, byProfit, byRegular].forEach((ranking, criteriaIndex) => {
+        const scoreKey = criteriaIndex === 0 ? 'balanced' : criteriaIndex === 1 ? 'profitability' : 'regularity';
+        if (ranking[0] && ranking[0].scores[scoreKey] > 0) medals[ranking[0].id].gold++;
+        if (ranking[1] && ranking[1].scores[scoreKey] > 0) medals[ranking[1].id].silver++;
+        if (ranking[2] && ranking[2].scores[scoreKey] > 0) medals[ranking[2].id].bronze++;
     });
 
-    // Calculer points totaux et trier
+    // Calculer le score total pour chaque jeu
+    gamesWithScores.forEach(game => {
+        const totalScore = game.scores.balanced + game.scores.profitability + game.scores.regularity;
+        medals[game.id].totalScore = totalScore;
+    });
+
+    // Calculer points de médailles et trier
     const globalRanking = Object.values(medals)
         .map(m => ({
             ...m,
@@ -906,18 +939,25 @@ function calculateRankings(gameStats) {
         }))
         .sort((a, b) => {
             if (b.points !== a.points) return b.points - a.points;
+            if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
             if (b.gold !== a.gold) return b.gold - a.gold;
             if (b.silver !== a.silver) return b.silver - a.silver;
             return b.bronze - a.bronze;
         });
 
+    // Identifier le meilleur et le pire jeu
+    const bestGame = globalRanking[0];
+    const worstGame = [...globalRanking].sort((a, b) => a.totalScore - b.totalScore)[0];
+
     return {
         rankings: { byBalanced, byProfit, byRegular },
-        globalRanking
+        globalRanking,
+        bestGame,
+        worstGame
     };
 }
 
-// ==================== Page Classement ====================  ← ICI
+// ==================== Page Classement ====================
 function showRankingPage() {
     showPage('ranking-page');
     loadRankingPage();
@@ -933,13 +973,14 @@ function loadRankingPage() {
         document.getElementById('global-ranking-list').innerHTML = `
             <p class="empty-state">Ajoutez des tickets pour voir le classement</p>
         `;
+        updateBestWorstDisplay(null, null);
         return;
     }
 
     const { byBalanced, byProfit, byRegular } = rankings.rankings;
     const maxRows = Math.max(byBalanced.length, byProfit.length, byRegular.length);
 
-    // ✅ Fonction helper pour afficher le nom + indicateur de confiance
+    // Fonction helper pour afficher le nom + indicateur de confiance
     const displayName = (game) => {
         if (!game) return '-';
         const confidenceIcon = game.confidence < 1 ? ' ⚠️' : '';
@@ -970,20 +1011,66 @@ function loadRankingPage() {
     rankings.globalRanking.forEach((game, index) => {
         const position = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
         const medalClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
-        
-        // ✅ Indicateur de confiance dans le classement global aussi
-        const confidenceIcon = game.ticketCount < 10 ? ' ⚠️' : '';
+
+        // Indicateur de confiance basé sur 5 tickets
+        const confidenceIcon = game.ticketCount < 5 ? ' ⚠️' : '';
+
+        // Indicateur de score (positif/négatif)
+        const scoreIndicator = game.totalScore > 0 ? '📈' : game.totalScore < 0 ? '📉' : '➖';
 
         globalHTML += `
             <div class="global-rank-item ${medalClass}">
                 <span class="global-position">${position}</span>
                 <span class="global-name">${escapeHtml(game.name)}${confidenceIcon}</span>
                 <span class="global-medals">🥇${game.gold} 🥈${game.silver} 🥉${game.bronze}</span>
+                <span class="global-score">${scoreIndicator}</span>
                 <span class="global-points">${game.points} pts</span>
             </div>
         `;
     });
     document.getElementById('global-ranking-list').innerHTML = globalHTML;
+
+    // Mettre à jour l'affichage meilleur/pire
+    updateBestWorstDisplay(rankings.bestGame, rankings.worstGame);
+}
+
+function updateBestWorstDisplay(bestGame, worstGame) {
+    const bestContainer = document.getElementById('best-game-display');
+    const worstContainer = document.getElementById('worst-game-display');
+
+    if (!bestContainer || !worstContainer) return;
+
+    if (bestGame) {
+        const confidenceIcon = bestGame.ticketCount < 5 ? ' ⚠️' : '';
+        bestContainer.innerHTML = `
+            <div class="best-worst-card best">
+                <div class="card-header">🏆 Meilleur Jeu</div>
+                <div class="card-name">${escapeHtml(bestGame.name)}${confidenceIcon}</div>
+                <div class="card-medals">🥇${bestGame.gold} 🥈${bestGame.silver} 🥉${bestGame.bronze}</div>
+                <div class="card-score ${bestGame.totalScore >= 0 ? 'positive' : 'negative'}">
+                    Score: ${bestGame.totalScore > 0 ? '+' : ''}${bestGame.totalScore.toFixed(1)}
+                </div>
+            </div>
+        `;
+    } else {
+        bestContainer.innerHTML = `<div class="best-worst-card empty">Pas assez de données</div>`;
+    }
+
+    if (worstGame) {
+        const confidenceIcon = worstGame.ticketCount < 5 ? ' ⚠️' : '';
+        worstContainer.innerHTML = `
+            <div class="best-worst-card worst">
+                <div class="card-header">📉 Pire Jeu</div>
+                <div class="card-name">${escapeHtml(worstGame.name)}${confidenceIcon}</div>
+                <div class="card-medals">🥇${worstGame.gold} 🥈${worstGame.silver} 🥉${worstGame.bronze}</div>
+                <div class="card-score ${worstGame.totalScore >= 0 ? 'positive' : 'negative'}">
+                    Score: ${worstGame.totalScore > 0 ? '+' : ''}${worstGame.totalScore.toFixed(1)}
+                </div>
+            </div>
+        `;
+    } else {
+        worstContainer.innerHTML = `<div class="best-worst-card empty">Pas assez de données</div>`;
+    }
 }
 
 // ==================== Service Worker & PWA ====================
