@@ -1,77 +1,64 @@
-const CACHE_NAME = 'grattage-tracker-v1.5.0';
-const urlsToCache = [
-    '/',
-    '/index.html',
-    '/style.css',
-    '/app.js',
-    '/manifest.json',
-    '/icon-192.png',
-    '/icon-512.png'
+// GraGa! 1.7.0 — Service worker (version web, publiée sous /GRAGA/ sur GitHub Pages)
+// Chemins RELATIFS : ils se résolvent par rapport à l'emplacement de sw.js.
+// À chaque nouvelle version de l'appli, changer CACHE_NAME.
+const CACHE_NAME = 'graga-v1.7.0';
+
+// Fichiers indispensables au fonctionnement hors ligne
+const CORE_FILES = [
+    './',
+    './index.html',
+    './style.css',
+    './app.js',
+    './sync-maison.js'
 ];
 
-// Installation
+// Fichiers secondaires : leur absence ne doit pas empêcher l'installation
+const OPTIONAL_FILES = [
+    './manifest.json',
+    './icon-192.png',
+    './icon-512.png'
+];
+
 self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => {
-                console.log('Cache ouvert');
-                return cache.addAll(urlsToCache);
-            })
-            .then(() => self.skipWaiting())
-    );
+    event.waitUntil((async () => {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.addAll(CORE_FILES.map((url) => new Request(url, { cache: 'reload' })));
+        await Promise.allSettled(OPTIONAL_FILES.map((url) => cache.add(new Request(url, { cache: 'reload' }))));
+        await self.skipWaiting();
+    })());
 });
 
-// Activation
 self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('Suppression ancien cache:', cacheName);
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        }).then(() => self.clients.claim())
-    );
+    event.waitUntil((async () => {
+        const keys = await caches.keys();
+        await Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)));
+        await self.clients.claim();
+    })());
 });
 
-// Fetch - Stratégie Cache First, puis Network
+// Cache d'abord, puis réseau — uniquement pour les fichiers de l'appli (même origine, GET).
+// Les requêtes vers le serveur maison (PocketBase) ne passent PAS par le cache.
 self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request)
-            .then((response) => {
-                // Cache hit - retourner la réponse du cache
-                if (response) {
-                    return response;
-                }
+    const request = event.request;
+    if (request.method !== 'GET') return;
+    if (new URL(request.url).origin !== self.location.origin) return;
 
-                // Cloner la requête
-                const fetchRequest = event.request.clone();
-
-                return fetch(fetchRequest).then((response) => {
-                    // Vérifier si la réponse est valide
-                    if (!response || response.status !== 200 || response.type !== 'basic') {
-                        return response;
-                    }
-
-                    // Cloner la réponse
-                    const responseToCache = response.clone();
-
-                    caches.open(CACHE_NAME)
-                        .then((cache) => {
-                            cache.put(event.request, responseToCache);
-                        });
-
-                    return response;
-                });
-            })
-            .catch(() => {
-                // Fallback pour les pages HTML
-                if (event.request.mode === 'navigate') {
-                    return caches.match('/index.html');
-                }
-            })
-    );
+    event.respondWith((async () => {
+        const cached = await caches.match(request, { ignoreSearch: request.mode === 'navigate' });
+        if (cached) return cached;
+        try {
+            const response = await fetch(request);
+            if (response && response.status === 200 && response.type === 'basic') {
+                const copy = response.clone();
+                caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+            }
+            return response;
+        } catch (err) {
+            if (request.mode === 'navigate') {
+                const page = await caches.match('./index.html');
+                if (page) return page;
+            }
+            throw err;
+        }
+    })());
 });
