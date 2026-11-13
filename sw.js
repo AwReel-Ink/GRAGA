@@ -1,7 +1,7 @@
 // GraGa! 1.7.0 — Service worker (version web, publiée sous /GRAGA/ sur GitHub Pages)
 // Chemins RELATIFS : ils se résolvent par rapport à l'emplacement de sw.js.
 // À chaque nouvelle version de l'appli, changer CACHE_NAME.
-const CACHE_NAME = 'graga-v1.7.0';
+const CACHE_NAME = 'graga-v1.7.1';
 
 // Fichiers indispensables au fonctionnement hors ligne
 const CORE_FILES = [
